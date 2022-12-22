@@ -1,5 +1,5 @@
-#ifndef BST_H
-#define BST_H
+#ifndef BST
+#define BST
 
 typedef struct BSTNode
 {
@@ -29,8 +29,8 @@ int addNode(BST_t *tree, int value);
 /// @param value node value 
 /// @return true if found, false if not
 int findNode(BST_t *tree, int value);
-int deleteNode(int value);
+int deleteNode(BST_t *tree, int value);
 
 void printTree(BSTNode* tree);
 
-#endif // BST_H
+#endif // BST

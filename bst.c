@@ -4,7 +4,8 @@
 BSTNode *createBSTNode(int value, BSTNode *left, BSTNode *right);
 BSTNode *copySubtree(BSTNode *node);
 void deleteSubtree(BSTNode *node);
-BSTNode *findBSTNode(BST_t *tree, int value, BSTNode **parent);
+BSTNode *findBSTNode(BSTNode *root, int value, BSTNode **parent);
+int deleteBSTNode(BSTNode **parent, BSTNode *node);
 
 BST_t *createTree()
 {
@@ -65,7 +66,14 @@ int addNode(BST_t *tree, int value)
 
 int findNode(BST_t *tree, int value)
 {
-	return findBSTNode(tree, value, NULL) != NULL;
+	return findBSTNode(tree->root, value, NULL) != NULL;
+}
+
+int deleteNode(BST_t *tree, int value)
+{
+	BSTNode *parent;
+	BSTNode *nodeToDelete = findBSTNode(tree->root, value, &parent);
+	return deleteBSTNode(&parent, nodeToDelete);
 }
 
 /* PRIVATE METHODS */
@@ -109,10 +117,10 @@ void deleteSubtree(BSTNode *node)
 	free(node);
 }
 
-BSTNode *findBSTNode(BST_t *tree, int value, BSTNode **parent)
+BSTNode *findBSTNode(BSTNode *root, int value, BSTNode **parent)
 {
 	BSTNode *prev = NULL;
-	BSTNode *walker = tree->root;
+	BSTNode *walker = root;
 
 	while (walker != NULL && walker->value != value)
 	{
@@ -125,6 +133,40 @@ BSTNode *findBSTNode(BST_t *tree, int value, BSTNode **parent)
 
 	if(parent != NULL) (*parent) = prev; 
 	return walker;
+}
+
+BSTNode *findMinValueNode(BSTNode *root, BSTNode **parent)
+{
+	BSTNode *walker = root;
+	while(walker->left != NULL) 
+	{
+		if(parent != NULL) *parent = walker;
+		walker = walker->left;
+	}
+	return walker;
+}
+
+int deleteBSTNode(BSTNode **parent, BSTNode *node)
+{
+	if(node->left == NULL || node->right == NULL)
+	{
+		BSTNode *child = node->left == NULL ? node->right : node->left;
+		if(parent == NULL) *parent = child;
+		else
+		{
+			if((*parent)->left == node) (*parent)->left = child;
+			else (*parent)->right = child;
+		}
+		free(node);
+	}
+	else
+	{
+		BSTNode *minNodeParent;
+		BSTNode *minNode = findMinValueNode(node->right, &minNodeParent);
+		node->value = minNode->value;
+		return deleteBSTNode(&minNodeParent, minNode);
+	}
+	return 1;
 }
 
 int isLeaf(BSTNode *node)
