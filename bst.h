@@ -31,6 +31,6 @@ int addNode(BST_t *tree, int value);
 int findNode(BST_t *tree, int value);
 int deleteNode(BST_t *tree, int value);
 
-void printTree(BSTNode* tree);
+void printTree(BST_t *tree, int width);
 
 #endif // BST
