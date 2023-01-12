@@ -309,7 +309,7 @@ int isLeaf(BSTNode *node)
 int idLen(int id)
 {
 	if(id == 0) return 1;
-	return log10(abs(id)) + 1 + id < 0 ? 1 : 0;
+	return log10(abs(id)) + 1 + (id < 0 ? 1 : 0);
 }
 
 int fast10Pow(int x)

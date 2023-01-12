@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 				break;
 			case 'D':
 				res = deleteNode(bst, x);
-				printf("%sdalo sie usunac %d do drzewa\n", res ? "U" : "Nie u", x);
+				printf("%sdalo sie usunac %d z drzewa\n", res ? "U" : "Nie u", x);
 				break;
 			default:
 				deleteTree(bst);
