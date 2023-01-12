@@ -128,11 +128,8 @@ void printTree(BST_t *tree, int width)
 			tmp = updateWidths(widths, i);
 			if (tmp == NULL)
 			{
-				free(widths);
-				free(buff[0]);
-				free(buff[1]);
 				fprintf(stderr, "Nie udalo sie zaalokowac wystarczjacej ilosci pamieci. Przerywanie rysowania\n");
-				return;
+				break;
 			}
 			free(widths);
 			widths = (int *)tmp;
@@ -141,11 +138,8 @@ void printTree(BST_t *tree, int width)
 			tmp = realloc(buff[1], size * 2 * sizeof(BSTNode));
 			if (tmp == NULL)
 			{
-				free(widths);
-				free(buff[0]);
-				free(buff[1]);
 				fprintf(stderr, "Nie udalo sie zaalokowac wystarczjacej ilosci pamieci. Przerywanie rysowania\n");
-				return;
+				break;
 			}
 			buff[1] = (BSTNode **)tmp;
 
@@ -166,11 +160,8 @@ void printTree(BST_t *tree, int width)
 			tmp = realloc(buff[0], size * sizeof(BSTNode));
 			if (tmp == NULL)
 			{
-				free(widths);
-				free(buff[0]);
-				free(buff[1]);
 				fprintf(stderr, "Nie udalo sie zaalokowac wystarczjacej ilosci pamieci. Przerywanie rysowania\n");
-				return;
+				break;
 			}
 			buff[0] = (BSTNode **)tmp;
 
@@ -282,7 +273,7 @@ BSTNode *deleteBSTNode(BSTNode *parent, BSTNode *node)
 	}
 	else
 	{
-		BSTNode *minNodeParent;
+		BSTNode *minNodeParent = node;
 		BSTNode *minNode = findMinValueNode(node->right, &minNodeParent);
 		node->value = minNode->value;
 		minNodeParent = deleteBSTNode(minNodeParent, minNode);
