@@ -8,11 +8,11 @@ BSTNode *copySubtree(BSTNode *node);
 void deleteSubtree(BSTNode *node);
 BSTNode *findBSTNode(BSTNode *root, int value, BSTNode **parent);
 BSTNode *deleteBSTNode(BSTNode *parent, BSTNode *node);
-int arrayEmpty(BSTNode **tab, int size);
+int lastLevel(BSTNode **tab, int size);
 
 int *updateWidths(int *widths, int newLvl);
-void printLevel(int n, BSTNode **tab, int *widths);
-void printConnection(int lvl, BSTNode **tab, int *widths);
+void printLevel(int lvl, BSTNode **tab, int *widths);
+int printConnection(int lvl, BSTNode ***tab, int **widths);
 
 BST_t *createTree()
 {
@@ -106,78 +106,26 @@ void printTree(BST_t *tree, int width)
 	if (tree == NULL)
 		return;
 
-	int size = 1;
-	int maxH = log2(width);
-	BSTNode **buff[2];
-	buff[0] = calloc(size, sizeof(BSTNode));
+	int *widths = calloc(1, sizeof(int));
+	BSTNode **buff = calloc(1, sizeof(BSTNode));
 
-	// cannot realloc ptr to NULL
-	buff[1] = calloc(size, sizeof(BSTNode));
-	int *widths = calloc(size, sizeof(int));
-
+	buff[0] = tree->root;
 	widths[0] = width;
-	buff[0][0] = tree->root;
-	void *tmp = NULL;
-	for (int i = 0; i <= maxH && arrayEmpty(buff[0], size) == 0; i++)
+
+	int maxH = log2(width / 2);
+
+	for (int i = 0; i <= maxH; i++)
 	{
-		if (i > 0)
-		{
-			printConnection(i - 1, buff[0], widths);
-
-			// Update widths
-			tmp = updateWidths(widths, i);
-			if (tmp == NULL)
-			{
-				fprintf(stderr, "Nie udalo sie zaalokowac wystarczjacej ilosci pamieci. Przerywanie rysowania\n");
-				break;
-			}
-			free(widths);
-			widths = (int *)tmp;
-
-			// Extend helper buffer
-			tmp = realloc(buff[1], size * 2 * sizeof(BSTNode));
-			if (tmp == NULL)
-			{
-				fprintf(stderr, "Nie udalo sie zaalokowac wystarczjacej ilosci pamieci. Przerywanie rysowania\n");
-				break;
-			}
-			buff[1] = (BSTNode **)tmp;
-
-			// fill helper buffer
-			for (int j = 0; j < size; j++)
-			{
-				buff[1][j * 2] = NULL;
-				buff[1][j * 2 + 1] = NULL;
-				BSTNode *node = buff[0][j];
-				if (node == NULL)
-					continue;
-				buff[1][j * 2] = node->left;
-				buff[1][j * 2 + 1] = node->right;
-			}
-
-			// extend main buffer
-			size *= 2;
-			tmp = realloc(buff[0], size * sizeof(BSTNode));
-			if (tmp == NULL)
-			{
-				fprintf(stderr, "Nie udalo sie zaalokowac wystarczjacej ilosci pamieci. Przerywanie rysowania\n");
-				break;
-			}
-			buff[0] = (BSTNode **)tmp;
-
-			// move data from helper to main buffer
-			for (int j = 0; j < size; j++)
-				buff[0][j] = buff[1][j];
-
-			if(arrayEmpty(buff[0], size)) break;
-		}
-		printLevel(i, buff[0], widths);
+		printLevel(i, buff, widths);
+		if (i == maxH || lastLevel(buff, 1<<i))
+			break;
+		int res = printConnection(i, &buff, &widths);
+		if (!res)
+			break;
 	}
 
+	free(buff);
 	free(widths);
-	free(buff[0]);
-	if (buff[1] != NULL)
-		free(buff[1]);
 }
 
 /* PRIVATE METHODS */
@@ -281,13 +229,12 @@ BSTNode *deleteBSTNode(BSTNode *parent, BSTNode *node)
 	}
 }
 
-int arrayEmpty(BSTNode **tab, int size)
+int lastLevel(BSTNode **tab, int size)
 {
-	int empty = 1;
 	for (int i = 0; i < size; i++)
-		if (tab[i] != NULL)
-			empty = 0;
-	return empty;
+		if (tab[i] != NULL && (tab[i]->left != NULL || tab[i]->right != NULL))
+			return 0;
+	return 1;
 }
 
 int isLeaf(BSTNode *node)
@@ -299,7 +246,8 @@ int isLeaf(BSTNode *node)
 
 int idLen(int id)
 {
-	if(id == 0) return 1;
+	if (id == 0)
+		return 1;
 	return log10(abs(id)) + 1 + (id < 0 ? 1 : 0);
 }
 
@@ -346,64 +294,89 @@ int *updateWidths(int *widths, int newLvl)
 	return res;
 }
 
-void printLevel(int n, BSTNode **tab, int *widths)
+BSTNode **updateNodes(BSTNode **nodes, int newLvl)
 {
-	int ids = 1 << n;
-	int maxH = 1;
-	for (int i = 0; i < ids; i++)
+	int n = 1 << (newLvl - 1);
+	int m = n * 2;
+	BSTNode **res = (BSTNode **)calloc(m, sizeof(BSTNode *));
+	if (res == NULL)
+		return NULL;
+
+	int i = 0;
+	for (int j = 0; j < m; j += 2)
 	{
-		if (tab[i] == NULL)
-			continue;
-		maxH = max(maxH, idLen(tab[i]->value) > widths[i] ? idLen(tab[i]->value) : 1);
+		res[j] = nodes[i] == NULL ? NULL : nodes[i]->left;
+		res[j + 1] = nodes[i] == NULL ? NULL : nodes[i]->right;
+		i++;
 	}
-	for (int h = 0; h < maxH; h++)
+
+	return res;
+}
+
+void printLevel(int lvl, BSTNode **nodes, int *widths)
+{
+	if (nodes == NULL)
+		return;
+	int ids = 1<<lvl;
+
+	int maxH = 1;
+	for(int i = 0; i < ids; i++)
+	{
+		if(nodes[i] == NULL) continue;
+		int len = idLen(nodes[i]->value);
+
+		if(len > widths[i])
+			maxH = max(maxH, len);
+	}
+
+	for(int h = 0; h < maxH; h++)
 	{
 		for (int i = 0; i < ids; i++)
 		{
-			if (tab[i] == NULL)
-			{
-				for (int j = 0; j < widths[i]; j++)
-					putchar(' ');
+			if(i > 0)
 				putchar(' ');
+
+			int pos = 0;
+			if(nodes[i] == NULL)
+			{
+				for(; pos < widths[i]; pos++)
+					putchar(' ');
 				continue;
 			}
-			int vertical = idLen(tab[i]->value) > widths[i];
 
-			if (vertical)
+			int mid = widths[i] / 2;
+
+			int len = idLen(nodes[i]->value);
+			if(len > widths[i])
 			{
-				int mid = widths[i] / 2;
-				int pos = 0;
 				for (; pos < mid; pos++)
 					putchar(' ');
 
-				if (h < idLen(tab[i]->value))
-				{
-					int res = (tab[i]->value / fast10Pow(idLen(tab[i]->value) - 1 - h));
-					putchar(res % 10 + '0');
-				}
-				// leaf check when printing '|'
-				else if (!isLeaf(tab[i]))
-					putchar('|');
-				else
-					putchar(' ');
+				char c = '|';
 
+				if(h == 0 && nodes[i]->value < 0)
+					c = '-';
+				else if(len > h)
+					c = (abs(nodes[i]->value) / fast10Pow(len - h - 1)) % 10 + '0';
+				else if(isLeaf(nodes[i]))
+					c = ' ';
+
+				putchar(c);
 				pos++;
+
 				for (; pos < widths[i]; pos++)
 					putchar(' ');
 			}
 			else
 			{
-				int mid = widths[i] / 2;
-				int pos = 0;
 				if (h == 0)
 				{
-
-					int l = mid - (idLen(tab[i]->value) / 2);
+					int l = mid - len / 2;
 
 					for (; pos < l; pos++)
 						putchar(' ');
-					printf("%d", tab[i]->value);
-					pos += idLen(tab[i]->value);
+					printf("%d", nodes[i]->value);
+					pos += idLen(nodes[i]->value);
 					for (; pos < widths[i]; pos++)
 						putchar(' ');
 				}
@@ -411,100 +384,82 @@ void printLevel(int n, BSTNode **tab, int *widths)
 				{
 					for (; pos < mid; pos++)
 						putchar(' ');
-					putchar((!isLeaf(tab[i])) ? '|' : ' ');
+					putchar((!isLeaf(nodes[i])) ? '|' : ' ');
 					pos++;
 					for (; pos < widths[i]; pos++)
 						putchar(' ');
 				}
 			}
-			if (i != ids - 1)
-				putchar(' ');
 		}
 		putchar('\n');
 	}
 }
 
-void printConnection(int lvl, BSTNode **tab, int *widths)
+int printConnection(int lvl, BSTNode ***nodes, int **widths)
 {
+	int *currentW = *widths;
+	int *newW = updateWidths(currentW, lvl + 1);
+	if (newW == NULL)
+		return 0;
+
+	BSTNode **currentN = *nodes;
+	BSTNode **newN = updateNodes(currentN, lvl + 1);
+
+	if (newN == NULL)
+		return 0;
+
 	int ids = 1 << lvl;
-	int stop = 0;
-	for (int offset = 0; !stop; offset++)
+	for (int i = 0; i < ids; i++)
 	{
-		stop = 1;
-		for (int i = 0; i < ids; i++)
-		{
-			if (tab[i] == NULL)
-			{
-				for (int pos = 0; pos < widths[i]; pos++)
-					putchar(' ');
-				putchar(' ');
-				continue;
-			}
-
-			int mid = widths[i] / 2;
-
-			int rightWidth = (widths[i] - 1) / 2;
-			int leftWidth = (widths[i] - 1) - rightWidth;
-
-			int rightMid = rightWidth / 2;
-			int leftMid = leftWidth / 2;
-
-			int pos = 0;
-			for (; pos < max(mid - offset, leftMid); pos++)
-				putchar(' ');
-			if (offset > 0 && tab[i]->left != NULL)
-			{
-				putchar(leftMid >= mid - offset ? '|' : '/');
-				if (leftMid < mid - (offset + 1))
-					stop = 0;
-				pos++;
-			}
-			else if (offset > 0)
-			{
-				putchar(' ');
-				pos++;
-			}
-
-			for (; pos < mid; pos++)
-				putchar(' ');
-
-			if (offset > 0)
-				putchar(' ');
-			else
-			{
-				if (tab[i]->left != NULL && tab[i]->right != NULL)
-					putchar('^');
-				else if (tab[i]->left != NULL)
-					putchar('/');
-				else if (tab[i]->right != NULL)
-					putchar('\\');
-				else
-					putchar(' ');
-			}
-
-			pos++;
-			for (; pos < mid + min(offset, rightMid + 1); pos++)
-				putchar(' ');
-			if (offset > 0 && tab[i]->right != NULL)
-			{
-				putchar(offset >= rightMid + 1 ? '|' : '\\');
-				if (offset + 1 < rightMid + 1)
-					stop = 0;
-				pos++;
-			}
-			else if (offset > 0)
-			{
-				putchar(' ');
-				pos++;
-			}
-
-			for (; pos < widths[i]; pos++)
-				putchar(' ');
-
+		if(i > 0)
 			putchar(' ');
-			if (offset == 0)
-				stop = 0;
+		int pos = 0;
+		
+		if(currentN[i] == NULL)
+		{
+			for(; pos < currentW[i]; pos++)
+				putchar(' ');
+			continue;
 		}
-		putchar('\n');
+
+		int mid = currentW[i] / 2;
+		int midL = newW[i * 2] / 2;
+		int midR = newW[i * 2 + 1] / 2;
+
+		for (; pos < midL; pos++)
+			putchar(' ');
+
+		putchar(newN[i * 2] == NULL ? ' ' : '/');
+		pos++;
+
+		for (; pos < mid; pos++)
+			putchar(newN[i * 2] == NULL ? ' ' : '-');
+
+		if(newN[i * 2] != NULL && newN[i * 2 + 1] != NULL)
+			putchar('^');
+		else if(newN[i * 2] == NULL && newN[i * 2 + 1] == NULL)
+			putchar(' ');
+		else if(newN[i * 2] == NULL)
+			putchar('\\');
+		else
+			putchar('/');
+		pos++;
+
+		for (; pos < mid + midR + 1; pos++)
+			putchar(newN[i * 2 + 1] == NULL ? ' ' : '-');
+
+		putchar(newN[i * 2 + 1] == NULL ? ' ' : '\\');
+		pos++;
+
+		for (; pos < currentW[i]; pos++)
+			putchar(' ');
 	}
+	putchar('\n');
+
+	free(currentW);
+	free(currentN);
+
+	*widths = newW;
+	*nodes = newN;
+	return 1;
 }
