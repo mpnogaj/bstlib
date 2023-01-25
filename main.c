@@ -5,9 +5,17 @@
 #include "bst.h"
 
 #define VALID_ARGS_LEN 6
-char validArgs[VALID_ARGS_LEN] = {'I', 'Q', 'D', 'P', 'Q', 'E'};
+char validArgs[VALID_ARGS_LEN] = {'i', 'q', 'd', 'p', 'q', 'e'};
 
-int validateArgument(char c)
+typedef enum
+{
+	EMPTY,
+	OK,
+	UNKNOWN_COMMAND,
+	INVALID_ARGS
+} GetCommandResult;
+
+int validateCommand(char c)
 {
 	for (int i = 0; i < VALID_ARGS_LEN; i++)
 		if (validArgs[i] == c)
@@ -15,19 +23,35 @@ int validateArgument(char c)
 	return 0;
 }
 
-char getCommand()
+void readTillEndOrNewLine()
 {
-	char x;
+	//read untill \n or EOF
+	int ch = 0;
+	while(1)
+	{
+		ch = getchar();
+		if(ch == EOF || ch == '\n') break;
+	}
+}
+
+GetCommandResult getCommand(char* cmd, int* arg)
+{
+	int ch = 0;
 	while (1)
 	{
-		x = getchar();
-		if (isspace(x))
-			continue;
-		if (validateArgument(x))
-			return x;
-		printf("Bledne polecenie\n");
+		ch = getchar();
+		if(!isspace(ch))
+		{
+			*cmd = tolower(ch);
+			break;
+		}
+		else if(ch == EOF || ch == '\n') return EMPTY;
 	}
-	return '\0';
+	if(!validateCommand(*cmd)) return UNKNOWN_COMMAND;
+	//don't need argument
+	if(*cmd == 'e' || *cmd == 'p') return OK;
+	if(scanf("%d", arg) != 1) return INVALID_ARGS;
+	return OK;
 }
 
 void printHelp()
@@ -58,40 +82,39 @@ int main(int argc, char **argv)
 	BST_t *bst = createTree();
 	while (1)
 	{
-		char c = getCommand();
-		if (c == 'E')
+		char cmd = '\0';
+		int arg = -1;
+		GetCommandResult getCmdRes = getCommand(&cmd, &arg);
+		if(getCmdRes == EMPTY) continue;
+		readTillEndOrNewLine();
+		if(getCmdRes != OK)
 		{
+			if(getCmdRes == UNKNOWN_COMMAND) fprintf(stderr, "Nieznane polecenie\n");
+			else if(getCmdRes == INVALID_ARGS) fprintf(stderr, "Niepoprawne argumenty\n");
+			continue;
+		}
+		int cmdRes = 0;
+		switch (cmd)
+		{
+		case 'e':
 			deleteTree(bst);
 			return 0;
-		}
-		if (c == 'P')
-		{
+			break;
+		case 'p':
 			printTree(bst, N);
-		}
-		else
-		{
-			int x;
-			while (scanf("%d", &x) != 1)
-				getchar();
-			int res;
-			switch (c)
-			{
-			case 'I':
-				res = addNode(bst, x);
-				printf("%sdalo sie dodac %d do drzewa\n", res ? "U" : "Nie u", x);
-				break;
-			case 'Q':
-				res = findNode(bst, x);
-				printf("%snaleziono %d w drzewie.\n", res ? "Z" : "Nie z", x);
-				break;
-			case 'D':
-				res = deleteNode(bst, x);
-				printf("%sdalo sie usunac %d z drzewa\n", res ? "U" : "Nie u", x);
-				break;
-			default:
-				deleteTree(bst);
-				return 1;
-			}
+			break;
+		case 'i':
+			cmdRes = addNode(bst, arg);
+			printf("%sdalo sie dodac %d do drzewa\n", cmdRes ? "U" : "Nie u", arg);
+			break;
+		case 'd':
+			deleteNode(bst, arg);
+			printf("%sdalo sie usunac %d z drzewa\n", cmdRes ? "U" : "Nie u", arg);
+			break;
+		case 'q':
+			findNode(bst, arg);
+			printf("%snaleziono %d w drzewa\n", cmdRes ? "Z" : "Nie z", arg);
+			break;
 		}
 	}
 
