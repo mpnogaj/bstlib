@@ -169,6 +169,14 @@ void deleteSubtree(BSTNode *node)
 	free(node);
 }
 
+/**
+ * @brief Finds BSTNode with given node, in given subtree
+ * 
+ * @param root root of the subtree
+ * @param value value to find
+ * @param parent pointer to node parent, NULL if node is NULL or root
+ * @return BSTNode* node, NULL if not found
+ */
 BSTNode *findBSTNode(BSTNode *root, int value, BSTNode **parent)
 {
 	BSTNode *prev = NULL;
@@ -188,8 +196,16 @@ BSTNode *findBSTNode(BSTNode *root, int value, BSTNode **parent)
 	return walker;
 }
 
+/**
+ * @brief Searches for node with lowest value in given subtree
+ * 
+ * @param root root of the subtree
+ * @param parent parent of the minimum node !!IMPORTANT!! requires starting parent
+ * @return BSTNode* minimum node
+ */
 BSTNode *findMinValueNode(BSTNode *root, BSTNode **parent)
 {
+	if(root == NULL) return NULL;
 	BSTNode *walker = root;
 	while (walker->left != NULL)
 	{
@@ -224,8 +240,10 @@ BSTNode *deleteBSTNode(BSTNode *parent, BSTNode *node)
 		BSTNode *minNodeParent = node;
 		BSTNode *minNode = findMinValueNode(node->right, &minNodeParent);
 		node->value = minNode->value;
-		minNodeParent = deleteBSTNode(minNodeParent, minNode);
-		return minNodeParent;
+		free(minNode);
+		if(minNodeParent == node) minNodeParent->right = NULL;
+		else minNodeParent->left = NULL;
+		return node;
 	}
 }
 

@@ -108,11 +108,11 @@ int main(int argc, char **argv)
 			printf("%sdalo sie dodac %d do drzewa\n", cmdRes ? "U" : "Nie u", arg);
 			break;
 		case 'd':
-			deleteNode(bst, arg);
+			cmdRes = deleteNode(bst, arg);
 			printf("%sdalo sie usunac %d z drzewa\n", cmdRes ? "U" : "Nie u", arg);
 			break;
 		case 'q':
-			findNode(bst, arg);
+			cmdRes = findNode(bst, arg);
 			printf("%snaleziono %d w drzewa\n", cmdRes ? "Z" : "Nie z", arg);
 			break;
 		}
