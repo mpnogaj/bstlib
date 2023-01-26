@@ -8,6 +8,9 @@
 
 #include "commands.h"
 
+/**
+ * @brief struct representing available options
+ */
 typedef struct option_t
 {
 	char *longName;
@@ -15,6 +18,7 @@ typedef struct option_t
 	char *description;
 } option_t;
 
+/* Private declarations */
 #define CREATE_OPTION(LNAME, SNAME, DESC) (option_t){.longName = LNAME, .shortName = SNAME, .description = DESC}
 
 #define OPTIONS_CNT 2
@@ -27,27 +31,13 @@ void printHelp(char *programName);
 void printOptionDescription(option_t *option);
 void printWrongUsage(char *programName);
 void printCommands();
+void executeOption(int id, char *programName);
 
-void executeOption(int id, char *programName)
-{
-	switch (id)
-	{
-	case 0: //help
-		printHelp(programName);
-		exit(0);
-	case 1: //commands
-		printCommands();
-		exit(0);
-	default: //invalid option
-		printWrongUsage(programName);
-		exit(1);
-	}
-}
-
+/* Public definitions */
 unsigned int parseArgs(int argc, char *argv[])
 {
 	//Get program name. If not specified get fallback name
-	char* programName = argc < 1 || argv[0] == NULL || argv[0][0] == '\0' ? "bst" : argv[0];
+	char* programName = argc < 1 || argv[0] == NULL || argv[0][0] == '\0' ? "<path_to_exe>" : argv[0];
 	bool valueRead = false;
 	unsigned int n;
 	for(int i = 1; i < argc; i++)
@@ -89,6 +79,23 @@ unsigned int parseArgs(int argc, char *argv[])
 	}
 
 	return n;
+}
+
+/* Private definitions */
+void executeOption(int id, char *programName)
+{
+	switch (id)
+	{
+	case 0: //help
+		printHelp(programName);
+		exit(0);
+	case 1: //commands
+		printCommands();
+		exit(0);
+	default: //invalid option
+		printWrongUsage(programName);
+		exit(1);
+	}
 }
 
 void printHelp(char *programName)

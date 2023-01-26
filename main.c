@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <errno.h>
-#include <stdbool.h>
-
 #include "bst.h"
 #include "commands.h"
 #include "argsHandler.h"

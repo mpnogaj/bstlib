@@ -4,7 +4,8 @@
 
 #include "bst.h"
 
-typedef enum
+
+typedef enum GetCommandResult
 {
 	EMPTY,
 	OK,
@@ -13,8 +14,23 @@ typedef enum
 	ERROR
 } GetCommandResult;
 
-#define CREATE_COMMAND(CMD, REQ, DESC) (command_t){.command = CMD, .requireArgument = REQ, .description = DESC}
+/**
+ * @brief Reads all chars from stdin untill EOF or \\n is reached
+ */
+void readTillEndOrNewLine();
 
+/**
+ * @brief Reads command from stdin and argument if needed
+ * 
+ * @param cmd 
+ * @param arg 
+ * @return GetCommandResult function result. See @ref GetCommandResult "for more information"
+ */
+GetCommandResult readCommand(command_t **cmd, int *arg);
+void printCommand(command_t *command);
+
+#define CREATE_COMMAND(CMD, REQ, DESC) (command_t){.command = CMD, .requireArgument = REQ, .description = DESC}
+#define AVAILABLE_COMMANDS_CNT 6
 command_t availableCommands[AVAILABLE_COMMANDS_CNT] = {
 	CREATE_COMMAND('I', true, "Wstaw wartosc do drzewa"),
 	CREATE_COMMAND('Q', true, "Sprawdz czy wartosc istnieje w drzewie"),
@@ -24,23 +40,13 @@ command_t availableCommands[AVAILABLE_COMMANDS_CNT] = {
 	CREATE_COMMAND('H', false, "Wypisz liste dostepnych polecen")
 };
 
-void printCommand(command_t *command)
-{
-	if(command == NULL) return;
-	fprintf(stdout, "  %c/%c%-13s%s\n", tolower(command->command), command->command, 
-		command->requireArgument ? " <ARGUMENT>:" : ":", command->description);
-}
-
+/* Public definitions */
 void printCommands()
 {
 	printf("Dostepne polecenia:\n");
 	for(int i = 0; i < AVAILABLE_COMMANDS_CNT; i++)
 		printCommand(&availableCommands[i]);
 }
-
-void readTillEndOrNewLine();
-GetCommandResult readCommand(command_t **cmd, int *arg);
-
 
 bool readAndExecuteCommand(BST_t *tree, unsigned int terminalWidth)
 {
@@ -82,6 +88,13 @@ bool readAndExecuteCommand(BST_t *tree, unsigned int terminalWidth)
 	return false;
 }
 
+/* Private definitions */
+void printCommand(command_t *command)
+{
+	if(command == NULL) return;
+	fprintf(stdout, "  %c/%c%-13s%s\n", tolower(command->command), command->command, 
+		command->requireArgument ? " <ARGUMENT>:" : ":", command->description);
+}
 
 command_t *getCommand(char c)
 {
