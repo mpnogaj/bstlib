@@ -19,23 +19,22 @@ typedef struct option_t
 } option_t;
 
 /* Private declarations */
-#define CREATE_OPTION(LNAME, SNAME, DESC) (option_t){.longName = LNAME, .shortName = SNAME, .description = DESC}
-
 #define OPTIONS_CNT 2
-option_t options[OPTIONS_CNT] = {
-	CREATE_OPTION("help", 'h', "Wypisz instrukcje uzycia i zakoncz program"),
-	CREATE_OPTION("commands", 'c', "Wypisz dostepne polecenia i zakoncz program")
-};
 
-void printHelp(char *programName);
+option_t createOption(char *longName, char shortName, char *description);
+void printHelp(char *programName, option_t *options);
 void printOptionDescription(option_t *option);
 void printWrongUsage(char *programName);
 void printCommands();
-void executeOption(int id, char *programName);
+void executeOption(int id, char *programName, option_t *options);
 
 /* Public definitions */
 unsigned int parseArgs(int argc, char *argv[])
 {
+	option_t options[OPTIONS_CNT] = {
+		createOption("help", 'h', "Wypisz instrukcje uzycia i zakoncz program"),
+		createOption("commands", 'c', "Wypisz dostepne polecenia i zakoncz program")
+	};
 	//Get program name. If not specified get fallback name
 	char* programName = argc < 1 || argv[0] == NULL || argv[0][0] == '\0' ? "<path_to_exe>" : argv[0];
 	bool valueRead = false;
@@ -54,7 +53,7 @@ unsigned int parseArgs(int argc, char *argv[])
 				if(longOption && strcmp(argv[i] + 2, option->longName) == 0) break;
 				else if(argv[i][1] == option->shortName) break;
 			}
-			executeOption(j, programName);
+			executeOption(j, programName, options);
 		}
 		else
 		{
@@ -82,12 +81,12 @@ unsigned int parseArgs(int argc, char *argv[])
 }
 
 /* Private definitions */
-void executeOption(int id, char *programName)
+void executeOption(int id, char *programName, option_t *options)
 {
 	switch (id)
 	{
 	case 0: //help
-		printHelp(programName);
+		printHelp(programName, options);
 		exit(0);
 	case 1: //commands
 		printCommands();
@@ -98,7 +97,7 @@ void executeOption(int id, char *programName)
 	}
 }
 
-void printHelp(char *programName)
+void printHelp(char *programName, option_t *options)
 {
 	printf("Uruchamianie:\n  %s [OPCJE] <SZEROKOSC_TERMINALA>\n\n", programName);
 	printf("Opcje:\n");
@@ -116,4 +115,9 @@ void printWrongUsage(char *programName)
 {
 	fprintf(stderr, "Nieprawidlowe argumenty wywolania programu.\n");
 	fprintf(stderr, "Uzyj '%s --help' zeby zobaczyc wiecej informacji\n", programName);
+}
+
+option_t createOption(char *longName, char shortName, char *description)
+{
+	return (option_t){.longName = longName, .shortName = shortName, .description = description};
 }
