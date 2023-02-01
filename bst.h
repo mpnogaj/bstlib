@@ -61,12 +61,4 @@ int findNode(BST_t *tree, int value);
  */
 int deleteNode(BST_t *tree, int value);
 
-/**
- * @brief Prints tree
- * 
- * @param tree pointer to tree to print 
- * @param width terminal width
- */
-void printTree(BST_t *tree, int width);
-
 #endif // BST

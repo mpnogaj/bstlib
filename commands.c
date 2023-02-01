@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 #include "bst.h"
-
+#include "bstPrinter.h"
 
 typedef enum GetCommandResult
 {
@@ -76,15 +76,18 @@ bool readAndExecuteCommand(BST_t *tree, unsigned int terminalWidth)
 		break;
 	case 'I':
 		cmdRes = addNode(tree, arg);
-		printf("%sdalo sie dodac %d do drzewa\n", cmdRes ? "U" : "Nie u", arg);
+		if(cmdRes) printf("Udalo sie dodac %d do drzewa\n", arg);
+		else printf("Nie udało się dodac %d do drzewa\n", arg);
 		break;
 	case 'D':
 		cmdRes = deleteNode(tree, arg);
-		printf("%sdalo sie usunac %d z drzewa\n", cmdRes ? "U" : "Nie u", arg);
+		if(cmdRes) printf("Udalo sie usunac %d z drzewa\n", arg);
+		else printf("Nie usunieto %d z drzewa poniewaz nie bylo go tam\n", arg);
 		break;
 	case 'Q':
 		cmdRes = findNode(tree, arg);
-		printf("%snaleziono %d w drzewa\n", cmdRes ? "Z" : "Nie z", arg);
+		if(cmdRes) printf("%d istnieje w drzewie\n", arg);
+		else printf("%d nie istnieje w drzewie\n", arg);
 		break;
 	}
 	return false;
