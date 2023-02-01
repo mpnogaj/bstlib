@@ -50,6 +50,7 @@ void printCommands()
 
 bool readAndExecuteCommand(BST_t *tree, unsigned int terminalWidth)
 {
+	printf(">>> ");
 	command_t *cmd;
 	int arg = -1;
 	GetCommandResult getCmdRes = readCommand(&cmd, &arg);
@@ -57,8 +58,9 @@ bool readAndExecuteCommand(BST_t *tree, unsigned int terminalWidth)
 	readTillEndOrNewLine();
 	if(getCmdRes != OK)
 	{
-		if(getCmdRes == UNKNOWN_COMMAND) printf("Nieznane polecenie\n");
-		else if(getCmdRes == INVALID_ARGS) printf("Niepoprawne argumenty\n");
+		if(getCmdRes == UNKNOWN_COMMAND) fprintf(stderr, "Nieznane polecenie\n");
+		else if (getCmdRes == INVALID_ARGS) fprintf(stderr, "Niepoprawne argumenty\n");
+		fprintf(stderr, "Uzyj polecenia h/H aby wyswietlic dostepne polecenia i argumenty\n");
 		return false;
 	}
 	bool cmdRes = 0;
